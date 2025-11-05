@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>掷圣杯 - 传统占卜占卦小游戏</title>
+  <!-- Tailwind CSS v3 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <!-- 统一的 Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#8B4513',
+            secondary: '#D2691E',
+            accent: '#CD853F',
+            background: '#F5F5DC',
+            text: '#3E2723'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'shake': 'shake 0.5s ease-in-out infinite',
+            'roll': 'roll 1s ease-out forwards',
+            'bounce-slow': 'bounce 2s infinite',
+          },
+          keyframes: {
+            shake: {
+              '0%, 100%': { transform: 'translateX(0)' },
+              '25%': { transform: 'translateX(-5px) rotate(-5deg)' },
+              '50%': { transform: 'translateX(5px) rotate(5deg)' },
+              '75%': { transform: 'translateX(-5px) rotate(-5deg)' },
+            },
+            roll: {
+              '0%': { transform: 'rotate(0deg) scale(1)' },
+              '50%': { transform: 'rotate(180deg) scale(1.1)' },
+              '100%': { transform: 'rotate(360deg) scale(1)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .cup-shadow {
+        filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.2));
+      }
+      .wood-texture {
+        background-image: url('https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/88a006b6b52c4a41b5264c2a170c48a9.png~tplv-a9rns2rl98-24:720:720.png?rcl=20251104205602070678453D096472BF1E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762865762&x-signature=%2F5g%2ByCzvwrlq2fal%2Bqp3BIZe1q8%3D');
+        background-size: cover;
+        background-position: center;
+      }
+    }
+
+    body {
+      background-color: #F5F5DC;
+      background-image: 
+        radial-gradient(#D2691E 2px, transparent 2px),
+        radial-gradient(#D2691E 2px, #F5F5DC 2px);
+      background-size: 40px 40px;
+      background-position: 0 0, 20px 20px;
+      min-height: 100vh;
+    }
+
+    .cup {
+      transition: transform 0.5s ease;
+    }
+
+    .cup:hover {
+      transform: scale(1.05);
+    }
+
+    .result-animation {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .history-item {
+      transition: all 0.3s ease;
+    }
+
+    .history-item:hover {
+      transform: translateX(5px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-roll {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-roll:after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.6s ease, height 0.6s ease;
+    }
+
+    .btn-roll:active:after {
+      width: 300px;
+      height: 300px;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body class="font-sans text-text">
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- 标题区域 -->
+    <header class="text-center mb-8">
+      <h1 class="text-4xl md:text-5xl font-bold text-primary mb-2 text-shadow">湄洲妈祖</h1>
+      <p class="text-lg text-secondary italic">天后灵签在线抽签</p>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="flex flex-col lg:flex-row gap-8">
+      <!-- 左侧：掷圣杯区域 -->
+      <div class="lg:w-2/3 bg-white rounded-xl shadow-lg p-6">
+        <!-- 游戏说明 -->
+        <div class="mb-6 p-4 bg-background rounded-lg border border-accent/30">
+          <h2 class="text-xl font-semibold text-primary mb-2">游戏规则</h2>
+          <p class="text-sm">掷圣杯是一种传统的占卦方式，使用两个半月形的木块（圣杯）。投掷后，根据圣杯的正反面组合判断结果：</p>
+          <ul class="mt-2 text-sm space-y-1">
+            <li><span class="font-medium">笑杯</span>：两个圣杯都朝上（平面向上）</li>
+            <li><span class="font-medium">圣杯</span>：一个朝上，一个朝下（一正一反）</li>
+            <li><span class="font-medium">阴杯</span>：两个圣杯都朝下（圆弧面向上）</li>
+          </ul>
+          <p class="mt-3 text-sm font-medium">抽签流程：抽到圣杯后可进行抽签，最初只显示签号。需要连续三次投掷都得到圣杯，才算有效的妈祖签，才会显示完整签文。</p>
+        </div>
+
+        <!-- 圣杯显示区域 -->
+        <div class="flex justify-center items-center my-8 min-h-[200px]">
+          <div id="cups-container" class="flex gap-4 md:gap-8">
+            <div id="cup1" class="cup w-24 h-32 md:w-32 md:h-48 flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110">
+              <img src="https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/370d0d494e02402daa496ec5d538d227.png~tplv-a9rns2rl98-24:720:720.png?rcl=202511042108103BC361683433CA736E4E&amp;rk3s=8e244e95&amp;rrcfp=8a172a1a&amp;x-expires=1762866490&amp;x-signature=1uGOG9L8h0vzxWhEYSG59m%2FEXBU%3D" alt="圣杯正面" class="w-full h-full object-contain">
+            </div>
+            <div id="cup2" class="cup w-24 h-32 md:w-32 md:h-48 flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110">
+              <img src="https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/370d0d494e02402daa496ec5d538d227.png~tplv-a9rns2rl98-24:720:720.png?rcl=202511042108103BC361683433CA736E4E&amp;rk3s=8e244e95&amp;rrcfp=8a172a1a&amp;x-expires=1762866490&amp;x-signature=1uGOG9L8h0vzxWhEYSG59m%2FEXBU%3D" alt="圣杯正面" class="w-full h-full object-contain">
+            </div>
+          </div>
+        </div>
+
+        <!-- 控制按钮 -->
+        <div class="flex justify-center">
+          <button id="roll-btn" class="btn-roll bg-secondary hover:bg-accent text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-accent/50">
+            <i class="fa fa-random mr-2"></i>掷圣杯
+          </button>
+        </div>
+
+        <!-- 结果显示区域 -->
+        <div id="result-area" class="mt-8 p-6 bg-background rounded-lg border border-accent/30 hidden">
+          <div class="text-center">
+            <h2 class="text-2xl font-bold mb-4" id="result-title">结果</h2>
+            <div class="flex justify-center">
+              <div id="result-image" class="w-48 h-48 flex items-center justify-center">
+                <!-- 结果图片将通过JS动态插入 -->
+              </div>
+            </div>
+            <p class="mt-4 text-lg" id="result-description">
+              <!-- 结果描述将通过JS动态插入 -->
+            </p>
+            
+            <!-- 抽签按钮（仅当结果为圣杯时显示） -->
+            <div id="lottery-button-container" class="mt-6 hidden">
+              <button id="draw-lot-button" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-accent/50">
+                <i class="fa fa-ticket mr-2"></i>抽一签
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 签文显示区域 -->
+        <div id="lottery-result-area" class="mt-8 p-6 bg-background rounded-lg border border-accent/30 hidden">
+          <div class="text-center">
+            <h2 class="text-2xl font-bold mb-2" id="lottery-title">签文</h2>
+            <div class="inline-block px-4 py-1 bg-primary text-white rounded-full mb-4">
+              <span id="lot-number" class="text-xl font-bold">第XX签</span>
+              <span id="lot-luck" class="ml-2">吉凶</span>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-inner">
+              <p id="lot-content" class="text-lg italic">
+                <!-- 签文内容将通过JS动态插入 -->
+              </p>
+            </div>
+            <div class="mt-6">
+              <button id="back-to-divination" class="text-secondary hover:text-primary transition-colors flex items-center mx-auto">
+                <i class="fa fa-arrow-left mr-1"></i> 返回继续掷圣杯
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：历史记录和解释区域 -->
+      <div class="lg:w-1/3 flex flex-col gap-6">
+        <!-- 历史记录 -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="text-xl font-semibold text-primary mb-4 flex items-center">
+            <i class="fa fa-history mr-2"></i>历史记录
+          </h2>
+          <div id="history-list" class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+            <p class="text-gray-500 text-center italic">暂无记录</p>
+          </div>
+          <button id="clear-history" class="mt-4 text-sm text-secondary hover:text-primary transition-colors flex items-center">
+            <i class="fa fa-trash-o mr-1"></i> 清空记录
+          </button>
+        </div>
+
+        <!-- 结果解释 -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="text-xl font-semibold text-primary mb-4 flex items-center">
+            <i class="fa fa-info-circle mr-2"></i>结果解释
+          </h2>
+          <div id="interpretation" class="text-sm space-y-3">
+            <div class="p-3 bg-background rounded-lg">
+              <h3 class="font-medium text-secondary">笑杯</h3>
+              <p>表示神明未决，需要重新投掷。</p>
+            </div>
+            <div class="p-3 bg-background rounded-lg">
+              <h3 class="font-medium text-secondary">圣杯</h3>
+              <p>表示神明同意或事情可行。</p>
+            </div>
+            <div class="p-3 bg-background rounded-lg">
+              <h3 class="font-medium text-secondary">阴杯</h3>
+              <p>表示神明不同意或事情不可行。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="mt-12 text-center text-sm text-gray-600">
+      <p>© 2025 掷圣杯小游戏 | 仅供娱乐</p>
+    </footer>
+  </div>
+
+  <script>
+    // 游戏状态
+    const gameState = {
+      isRolling: false,
+      history: [],
+      lotteryState: {
+        isActive: false,      // 是否正在进行抽签流程
+        currentLotNumber: null, // 当前抽到的签号
+        requiredHolyCups: 3,  // 需要连续掷出的圣杯数量
+        currentHolyCups: 0    // 当前连续掷出的圣杯数量
+      }
+    };
+
+    // DOM 元素
+    const cup1 = document.getElementById('cup1');
+    const cup2 = document.getElementById('cup2');
+    const rollBtn = document.getElementById('roll-btn');
+    const resultArea = document.getElementById('result-area');
+    const resultTitle = document.getElementById('result-title');
+    const resultImage = document.getElementById('result-image');
+    const resultDescription = document.getElementById('result-description');
+    const historyList = document.getElementById('history-list');
+    const clearHistoryBtn = document.getElementById('clear-history');
+    const drawLotButton = document.getElementById('draw-lot-button');
+    const lotteryButtonContainer = document.getElementById('lottery-button-container');
+    const lotteryResultArea = document.getElementById('lottery-result-area');
+    const backToDivinationBtn = document.getElementById('back-to-divination');
+
+    // 圣杯结果配置
+    const cupResults = [
+      {
+        name: '笑杯',
+        value: 'smile',
+        description: '两个圣杯都朝上，表示神明未决，需要重新投掷。',
+        image: 'https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/88a006b6b52c4a41b5264c2a170c48a9.png~tplv-a9rns2rl98-24:720:720.png?rcl=20251104205602070678453D096472BF1E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762865762&x-signature=%2F5g%2ByCzvwrlq2fal%2Bqp3BIZe1q8%3D',
+        cup1State: 'up',
+        cup2State: 'up'
+      },
+      {
+        name: '圣杯',
+        value: 'holy',
+        description: '一个朝上，一个朝下，表示神明同意或事情可行。',
+        image: 'https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/c1d54c866ee641cd823493031530810a.png~tplv-a9rns2rl98-24:720:720.png?rcl=20251104205602070678453D096472BF1E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762865762&x-signature=TVeQBar9qbQKGLoM%2FxvVmFEbP3w%3D',
+        cup1State: 'up',
+        cup2State: 'down'
+      },
+      {
+        name: '阴杯',
+        value: 'yin',
+        description: '两个圣杯都朝下，表示神明不同意或事情不可行。',
+        image: 'https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/7ede54b0a300476e8d66ccce1a71cc20.png~tplv-a9rns2rl98-24:720:720.png?rcl=20251104205602070678453D096472BF1E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762865762&x-signature=OlL9PERK6%2BTQR0n1oEYJUcxeAgw%3D',
+        cup1State: 'down',
+        cup2State: 'down'
+      }
+    ];
+
+    // 60个签文数据
+    const lots = [
+      { number: 1, luck: "甲子", content: "包公请雷惊仁宗,日出便见风云散、光明清净照世间、一向前途通大道、万事清吉保平安。" },
+      { number: 2, luck: "甲寅", content: "赵子龙救阿斗,于今此景正当时、看看欲吐百花魁、若能遇得春色到、一洒清吉脱尘埃。" },
+      { number: 3, luck: "甲辰", content: "沈万三掘宝与正德君斗法,劝君把定心莫虚、天注衣禄自有余、和合重重常吉庆、时来终遇得明珠。" },
+      { number: 4, luck: "甲午", content: "卢龙王次女招亲,风恬浪静可行舟、恰是中秋月一轮、凡事不须多忧虑、福禄自有庆家门。" },
+      { number: 5, luck: "甲申", content: "王剪战袁达,只恐前途命有变、劝君作急可宜先、且守长江无大事、命逢太白守身边。" },
+      { number: 6, luck: "甲戌", content: "鸟精乱宋仁宗,风云致雨落洋洋、天灾时气必有伤、命内此事难和合、更逢一足出外乡。" },
+      { number: 7, luck: "乙丑", content: "国公暗察白袍将,云开月出正分明、不须进退问前程、婚姻皆由天注定、和合清吉万事成。" },
+      { number: 8, luck: "乙卯", content: "薛仁贵回家,禾稻看看结成完、此事必定两相全、回到家中宽心坐、妻儿鼓舞乐团圆。" },
+      { number: 9, luck: "乙巳", content: "黄飞虎反出五关,龙虎相随在深山、君尔何须背后看、不知此去相爱误、他日与我却无干。" },
+      { number: 10, luck: "乙未", content: "岳飞掠秦桧,花开结子一半枯、可惜今年汝虚度、渐渐日落西山去、劝君不用向前途。" },
+      { number: 11, luck: "乙酉", content: "韩文公过秦岭湘子扫霜雪,灵鸡渐渐见分明、凡事且看子丑寅、云开月出照天下、郎君即便见太平。" },
+      { number: 12, luck: "乙亥", content: "梅良玉与陈春生同落难得救,长江风浪渐渐静、于今得进可安宁、必有贵人相扶助、凶事脱出见太平。" },
+      { number: 13, luck: "丙子", content: "汉李广父子阵亡,命中正逢罗孛关、用尽心机总未休、作福问神难得过、恰是行舟上高滩。" },
+      { number: 14, luck: "丙寅", content: "桃园三结义,财中渐渐见分明、花开花谢结子成、宽心且看月中桂、郎君即便见太平。" },
+      { number: 15, luck: "丙辰", content: "武吉挑柴打死人,八十原来是太公、看看晚景遇文王、目下紧事休相问、劝君且守待运通。" },
+      { number: 16, luck: "丙午", content: "李世民游地府,不须作福不须求、用尽心机总未休、阳世不知阴世事、官法如炉不自由。" },
+      { number: 17, luck: "丙申", content: "庄子劈棺,旧恨重重未改为、家中祸患不临身、须当谨防宜作福、龙蛇交会得和合。" },
+      { number: 18, luck: "丙戌", content: "秦叔宝救李渊,君问中间此言因、看看禄马拱前程、求得贵人多得利、和合自有两分明。" },
+      { number: 19, luck: "丁丑", content: "红孩儿截住去路,富贵由命天注定、心高必然误君期、不然且回依旧路、云开月出自分明。" },
+      { number: 20, luck: "丁卯", content: "孙悟空大难火灾,前途功名未得意、只恐命内有交加、两家必定防损失、劝君且退莫咨嗟。" },
+      { number: 21, luck: "丁巳", content: "观音收大鹏鸟,十方佛法有灵通、大难祸患不相同、红日当空常照耀、还有贵人到家堂。" },
+      { number: 22, luck: "丁未", content: "文王为姜太公拖车,太公家业八十成、月出光辉四海明、命内自然逢大吉、茅屋中间百事亨。" },
+      { number: 23, luck: "丁酉", content: "姜子牙火烧琵琶,欲去长江水阔茫、前途未遂运未通、如今丝纶常在手、只恐鱼水不相逢。" },
+      { number: 24, luck: "丁亥", content: "秦叔宝救李渊,月出光辉四海明、前途禄位见太平、浮云扫退终无事、可保祸患不临身。" },
+      { number: 25, luck: "戊子", content: "凤娇观音庵问签中奸臣计,总是前途莫心劳、求神问圣枉是多、但看鸡犬日过后、不须作福事如何。" },
+      { number: 26, luck: "戊寅", content: "范丹洗浴遇贤妻,选出牡丹第一枝、劝君折取莫迟疑、世间若问相知处、万事逢春正及时。" },
+      { number: 27, luck: "戊辰", content: "胡完救文氏母女,君尔宽心且自由、门庭清吉家无忧、财宝自然终吉利、凡事无伤不用求。" },
+      { number: 28, luck: "戊午", content: "楚汉相争,于今莫作此当时、虎落平阳被犬欺、世间凡事何难定、千山万水也迟疑。" },
+      { number: 29, luck: "戊申", content: "周元表充军获救,枯木可惜未逢春、如今还在暗中藏、宽心且守风霜退、还君依旧作乾坤。" },
+      { number: 30, luck: "戊戌", content: "猪哥过柿山,渐渐看此月中和、过后须防未得高、改变颜色前途去、凡事必定见重劳。" },
+      { number: 31, luck: "己丑", content: "孟姜女招亲,绿柳苍苍正当时、任君此去作乾坤、花果结实无残谢、福禄自有庆家门。" },
+      { number: 32, luck: "己卯", content: "刘备入东吴进赘,龙虎相交在门前、此事必定两相连、黄金忽然变成铁、何用作福问神仙。" },
+      { number: 33, luck: "己巳", content: "铜银买纸靴,欲去长江水阔茫、行舟把定未遭风、户内用心再作福、看看鱼水得相逢。" },
+      { number: 34, luck: "己未", content: "曹操潼关遇马超,危险高山行过尽、莫嫌此路有重重、若见兰桂渐渐发、长蛇反转变成龙。" },
+      { number: 35, luck: "己酉", content: "吴汉杀妻为母救主,此事何须用心机、前途变怪自然知、看看此去得和合、渐渐脱出见太平。" },
+      { number: 36, luck: "己亥", content: "薛仁贵救驾,福如东海寿如山、君尔何须叹苦难、命内自然逢大吉、祈保分明得自安。" },
+      { number: 37, luck: "庚子", content: "正德君戏李凤姐,运逢得意身显变、君尔身中皆有益、一向前途无难事、决意之中保清吉。" },
+      { number: 38, luck: "庚寅", content: "刘备请孔明三顾茅庐,名显有意在中央、不须祈祷心自安、看看早晚日过后、即时得意在其间。" },
+      { number: 39, luck: "庚辰", content: "孔夫子小儿答,意中若问神仙路、劝尔且退望高楼、宽心且守宽心坐、必然遇得贵人扶。" },
+      { number: 40, luck: "庚午", content: "薛平贵探寒窑,平生富贵成禄位、君家门户定光辉、此中必定无损失、夫妻百岁喜相随。" },
+      { number: 41, luck: "庚申", content: "王小姐为色事到祸审英月,今行到此实难推、歌歌畅饮自徘徊、鸡犬相闻消息近、婚姻夙世结成双。" },
+      { number: 42, luck: "庚戌", content: "姜女送寒衣哭倒万里长城,一重江水一重山、谁知此去路又难、任他改求终不过、是非终久未得安。" },
+      { number: 43, luck: "辛丑", content: "苏秦假不第,一年作事急如飞、君尔宽心莫迟疑、贵人还在千里外、音信月中渐渐知。" },
+      { number: 44, luck: "辛卯", content: "益春留伞,客到前途多得利、君尔何故两相疑、虽是中间防进退、月出光辉得运时。" },
+      { number: 45, luck: "辛巳", content: "孔夫子过番逢小儿,花开今已结成果、富贵荣华终到老、君子小人相会合、万事清吉莫烦恼。" },
+      { number: 46, luck: "辛未", content: "狄仁杰中兴大唐,功名得意与君显、前途富贵喜安然、若遇一轮明月照、十五团圆光满天。" },
+      { number: 47, luck: "辛酉", content: "朱买臣负薪,君尔何须问圣迹、自己心中皆有益、于今且看月中旬、凶事脱出化成吉。" },
+      { number: 48, luck: "辛亥", content: "王昭君和番,阳世作事未和同、云遮月色正朦胧、心中意欲前途去、只恐前途运未通。" },
+      { number: 49, luck: "壬子", content: "伍子胥过昭关,言语虽多不可从、风云静处未行龙、暗中终得明消息、君尔何须问重重。" },
+      { number: 50, luck: "壬寅", content: "小儿路遇恶鬼,佛前发誓无异心、且看前途得好音、此物原来本是铁、也能变化得成金。" },
+      { number: 51, luck: "壬辰", content: "赵匡胤困河东,东西南北不堪行、前途此事正可当、劝君把定莫烦恼、家门自有保安康。" },
+      { number: 52, luck: "壬午", content: "郑元和嫖阿仙,功名事业本由天、不须挂念意悬悬、若问中间迟与速、风云际会在眼前。" },
+      { number: 53, luck: "壬申", content: "苏秦夫妻相会,看君来问心中事、积善之家庆有余、运亨财子双双至、指日喜气溢门闾。" },
+      { number: 54, luck: "壬戌", content: "吕仙枕黄粱未熟,孤灯寂寂夜沉沉、万事清吉万事成、若逢阴中有善果、烧得好香达神明。" },
+      { number: 55, luck: "癸丑", content: "郭华醉酒误佳期,须知进退总言虚、看看发暗未必全、珠玉深藏还未变、心中但得枉徒然。" },
+      { number: 56, luck: "癸卯", content: "范少伯泛舟五湖,病中若得苦心劳、到底完全总未遭、去后不须回头问、心中事务尽消磨。" },
+      { number: 57, luck: "癸巳", content: "庞涓孙膑学法,劝君把定心莫虚、前途清吉得运时、到底中间无大事、又遇神仙守安居。" },
+      { number: 58, luck: "癸未", content: "汉高祖斩白蛇,蛇身意欲变成龙、只恐命内运未通、久病且作宽心座、言语虽多不可从。" },
+      { number: 59, luck: "癸酉", content: "皇都市上有神仙,有心作福莫迟疑、求名清吉正当时、此事必能成会合、财宝自然喜相随。" },
+      { number: 60, luck: "癸亥", content: "薛刚踢死太子惊崩圣驾,月出光辉本清吉、浮云总是蔽荫色、户内用心再作福、当官分理便有益。" }
+    ];
+
+    // 初始化函数
+    function init() {
+      // 加载历史记录
+      loadHistory();
+      
+      // 更新历史记录显示
+      updateHistoryDisplay();
+      
+      // 添加事件监听器
+      rollBtn.addEventListener('click', rollCups);
+      clearHistoryBtn.addEventListener('click', clearHistory);
+      cup1.addEventListener('click', () => toggleCup(cup1));
+      cup2.addEventListener('click', () => toggleCup(cup2));
+      drawLotButton.addEventListener('click', drawLot);
+      backToDivinationBtn.addEventListener('click', backToDivination);
+    }
+
+    // 掷圣杯函数
+    function rollCups() {
+      if (gameState.isRolling) return;
+      
+      gameState.isRolling = true;
+      rollBtn.disabled = true;
+      rollBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>投掷中...';
+      
+      // 隐藏结果区域
+      resultArea.classList.add('hidden');
+      
+      // 添加摇晃动画
+      cup1.classList.add('animate-shake');
+      cup2.classList.add('animate-shake');
+      
+      // 随机决定结果
+      setTimeout(() => {
+        // 移除摇晃动画
+        cup1.classList.remove('animate-shake');
+        cup2.classList.remove('animate-shake');
+        
+        // 添加旋转动画
+        cup1.classList.add('animate-roll');
+        cup2.classList.add('animate-roll');
+        
+        // 延迟显示结果
+        setTimeout(() => {
+          // 移除旋转动画
+          cup1.classList.remove('animate-roll');
+          cup2.classList.remove('animate-roll');
+          
+          // 加权随机选择结果，概率分布为：笑杯1/4，阴杯1/4，圣杯1/2
+          const random = Math.random();
+          let randomResult;
+          
+          if (random < 0.25) {
+            // 25% 概率选择笑杯
+            randomResult = cupResults[0];
+          } else if (random < 0.5) {
+            // 25% 概率选择阴杯
+            randomResult = cupResults[2];
+          } else {
+            // 50% 概率选择圣杯
+            randomResult = cupResults[1];
+          }
+          
+          // 更新圣杯显示
+          updateCupsDisplay(randomResult);
+          
+          // 显示结果
+          displayResult(randomResult);
+          
+          // 添加到历史记录
+          addToHistory(randomResult);
+          
+          // 处理抽签流程
+          handleLotteryProcess(randomResult);
+          
+          // 恢复按钮状态
+          gameState.isRolling = false;
+          rollBtn.disabled = false;
+          rollBtn.innerHTML = '<i class="fa fa-random mr-2"></i>掷圣杯';
+        }, 1000);
+      }, 1500);
+    }
+
+    // 处理抽签流程
+    function handleLotteryProcess(result) {
+      // 如果正在进行抽签流程
+      if (gameState.lotteryState.isActive) {
+        if (result.value === 'holy') {
+          // 掷出圣杯，增加计数
+          gameState.lotteryState.currentHolyCups++;
+          
+          // 检查是否完成连续三次圣杯
+          if (gameState.lotteryState.currentHolyCups >= gameState.lotteryState.requiredHolyCups) {
+            // 完成连续连续连续三次圣杯，显示完整签文
+            showCompleteLot();
+          } else {
+            // 尚未完成连续三次圣杯，显示进度
+            updateLotteryProgress();
+          }
+        } else {
+          // 掷出非圣杯，重置抽签流程
+          resetLotteryProcess();
+        }
+      }
+    }
+
+    // 更新抽签进度
+    function updateLotteryProgress() {
+      // 显示结果区域
+      resultArea.classList.remove('hidden');
+      
+      // 更新结果描述，显示当前进度
+      const progressText = `已连续掷出 ${gameState.lotteryState.currentHolyCups} 个圣杯，还需要 ${gameState.lotteryState.requiredHolyCups - gameState.lotteryState.currentHolyCups} 个圣杯才能获得完整完整签文。`;
+      resultDescription.textContent = progressText;
+      
+      // 隐藏抽签按钮
+      lotteryButtonContainer.classList.add('hidden');
+    }
+
+    // 显示完整签文
+    function showCompleteLot() {
+      // 找到当前签号对应的对应的签文
+      const lot = lots.find(l => l.number === gameState.lotteryState.currentLotNumber);
+      
+      if (lot) {
+        // 更新签文显示
+        document.getElementById('lot-number').textContent = `第${lot.number}签`;
+        document.getElementById('lot-luck').textContent = lot.luck;
+        document.getElementById('lot-content').textContent = lot.content;
+        
+        // 修改返回按钮文本
+        backToDivinationBtn.innerHTML = '<i class="fa fa-arrow-left mr-1"></i> 重新开始';
+        
+        // 重置抽签流程状态
+        gameState.lotteryState.isActive = false;
+      }
+    }
+
+    // 重置抽签流程
+    function resetLotteryProcess() {
+      // 重置抽签状态
+      gameState.lotteryState.isActive = false;
+      gameState.lotteryState.currentLotNumber = null;
+      gameState.lotteryState.currentHolyCups = 0;
+      
+      // 显示结果区域
+      resultArea.classList.remove('hidden');
+      
+      // 更新结果描述，提示重新开始
+      resultDescription.textContent = '未能能连续三次掷出三次圣杯，抽签流程已重置。请重新重新掷圣杯并抽签。';
+      
+      // 隐藏抽签签结果区域，显示掷杯区域
+      lotteryResultArea.classList.add('hidden');
+      
+      // 隐藏抽签按钮
+      lotteryButtonContainer.classList.add('hidden');
+    }
+
+    // 更新圣杯显示
+    function updateCupsDisplay(result) {
+      // 重置圣杯样式
+      cup1.className = 'cup w-24 h-32 md:w-32 md:h-48 flex items items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110';
+      cup2.className = 'cup w-24 h-32 md:w-32 md:h-48 flex items-center justify justify-center cursor-pointer transition-all duration-300 hover:scale-110';
+      
+      // 获取圣杯图片元素
+      const cup1Img = cup1.querySelector('img');
+      const cup2Img = cup2.querySelector('img');
+      
+      // 根据结果设置圣杯图片
+      if (result.cup1State === 'down') {
+        cup1Img.src = 'https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/33df181c98cf40e19c0591e0c0afec46.png~tplv-a9rns2rl98-24:720:720.png?rcl=202511042108103BC361683433CA736E4E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762866490&x-signature=GIDaHbrjfg2HHLKYX%2F%2BHzjJW0%2Fc%3D';
+        cup1Img.alt = '圣杯反面';
+      } else {
+        cup1Img.src = 'https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/370d0d494e02402daa496ec5d538d227.png~tplv-a9rns2rl98-24:720:720.png?rcl=202511042108103BC361683433CA736E4E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762866490&x-signature=1uGOG9L8h0vzxWhEYSG59m%2FEXBU%3D';
+        cup1Img.alt = '圣杯正面';
+      }
+      
+      if (result.cup2State === 'down') {
+        cup2Img.src = 'https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/33df181c98cf40e19c0591e0c0afec46.png~tplv-a9rns2rl98-24:720:720.png?rcl=202511042108103BC361683433CA736E4E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762866490&x-signature=GIDaHbrjfg2HHLKYX%2F%2BHzjJW0%2Fc%3D';
+        cup2Img.alt = '圣杯反面';
+      } else {
+        cup2Img.src = 'https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/370d0d494e02402daa496ec5d538d227.png~tplv-a9rns2rl98-24:720:720.png?rcl=202511042108103BC361683433CA736E4E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762866490&x-signature=1uGOG9L8h0vzxWhEYSG59m%2FEXBU%3D';
+        cup2Img.alt = '圣杯正面';
+      }
+    }
+
+    // 显示结果
+    function displayResult(result) {
+      resultTitle.textContent = result.name;
+      resultImage.innerHTML = `<img src="${result.image}" alt="${result.name}" class="w-full h-full object-contain cup-shadow">`;
+      resultDescription.textContent = result.description;
+      
+      // 显示结果区域并添加动画
+      resultArea.classList.remove('hidden');
+      resultArea.classList.add('result-animation');
+      
+      // 根据结果类型添加不同的颜色
+      if (result.value === 'smile') {
+        resultArea.classList.add('border-yellow-400', 'bg-yellow-50');
+        resultArea.classList.remove('border-green-400', 'bg-green-50', 'border-red-400', 'bg-red-50');
+      } else if (result.value === 'holy') {
+        resultArea.classList.add('border-green-400', 'bg-green-50');
+        resultArea.classList.remove('border-yellow-400', 'bg-yellow-50', 'border-red-400', 'bg-red-50');
+        // 如果不是正在进行抽签流程，显示抽签按钮
+        if (!gameState.lotteryState.isActive) {
+          lotteryButtonContainer.classList.remove('hidden');
+        }
+      } else if (result.value === 'yin') {
+        resultArea.classList.add('border-red-400', 'bg-red-50');
+        resultArea.classList.remove('border-yellow-400', 'bg-yellow-50', 'border-green-400', 'bg-green-50');
+      }
+      
+      // 如果不是圣杯或正在进行抽签流程，隐藏抽签按钮
+      if (result.value !== 'holy' || gameState.lotteryState.isActive) {
+        lotteryButtonContainer.classList.add('hidden');
+      }
+    }
+
+    // 手动切换圣杯状态
+    function toggleCup(cup) {
+      if (gameState.isRolling) return;
+      
+      const cupImg = cup.querySelector('img');
+      const isFront = cupImg.src.includes('370d0d494e02402daa496ec5d538d227');
+      
+      if (isFront) {
+        // 切换到反面
+        cupImg.src = 'https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/33df181c98cf40e19c0591e0c0afec46.png~tplv-a9rns2rl98-24:720:720.png?rcl=202511042108103BC361683433CA736E4E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762866490&x-signature=GIDaHbrjfg2HHLKYX%2F%2BHzjJW0%2Fc%3D';
+        cupImg.alt = '圣杯反面';
+      } else {
+        // 切换到正面
+        cupImg.src = 'https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/370d0d494e02402daa496ec5d538d227.png~tplv-a9rns2rl98-24:720:720.png?rcl=202511042108103BC361683433CA736E4E&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1762866490&x-signature=1uGOG9L8h0vzxWhEYSG59m%2FEXBU%3D';
+        cupImg.alt = '圣杯正面';
+      }
+      
+      // 检查是否两个圣杯都被手动设置
+      checkManualResult();
+    }
+
+    // 检查手动设置的结果
+    function checkManualResult() {
+      const cup1Img = cup1.querySelector('img');
+      const cup2Img = cup2.querySelector('img');
+      
+      const cup1Up = cup1Img.src.includes('370d0d494e02402daa496ec5d538d227');
+      const cup2Up = cup2Img.src.includes('370d0d494e02402daa496ec5d538d227');
+      
+      let result;
+      
+      if (cup1Up && cup2Up) {
+        result = cupResults[0]; // 笑杯
+      } else if ((cup1Up && !cup2Up) || (!cup1Up && cup2Up)) {
+        result = cupResults[1]; // 圣杯
+      } else {
+        result = cupResults[2]; // 阴杯
+      }
+      
+      // 显示结果
+      displayResult(result);
+      
+      // 添加到历史记录
+      addToHistory(result);
+      
+      // 处理抽签流程
+      handleLotteryProcess(result);
+    }
+
+    // 添加到历史记录
+    function addToHistory(result) {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString();
+      
+      const historyItem = {
+        result,
+        time: timeString,
+        timestamp: now.getTime()
+      };
+      
+      gameState.history.unshift(historyItem);
+      
+      // 限制历史记录长度
+      if (gameState.history.length > 10) {
+        gameState.history.pop();
+      }
+      
+      // 保存到本地存储
+      saveHistory();
+      
+      // 更新历史记录显示
+      updateHistoryDisplay();
+    }
+
+    // 保存历史记录到本地存储
+    function saveHistory() {
+      localStorage.setItem('divinationHistory', JSON.stringify(gameState.history));
+    }
+
+    // 从本地存储加载历史记录
+    function loadHistory() {
+      const savedHistory = localStorage.getItem('divinationHistory');
+      if (savedHistory) {
+        gameState.history = JSON.parse(savedHistory);
+      }
+    }
+
+    // 更新历史记录显示
+    function updateHistoryDisplay() {
+      if (gameState.history.length === 0) {
+        historyList.innerHTML = '<p class="text-gray-500 text-center italic">暂无记录</p>';
+        return;
+      }
+      
+      historyList.innerHTML = '';
+      
+      gameState.history.forEach(item => {
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item p-3 bg-background rounded-lg';
+        
+        let iconClass = 'fa-question-circle';
+        let textColor = 'text-gray-600';
+        
+        if (item.result.value === 'smile') {
+          iconClass = 'fa-meh-o';
+          textColor = 'text-yellow-600';
+        } else if (item.result.value === 'holy') {
+          iconClass = 'fa-check-circle';
+          textColor = 'text-green-600';
+        } else if (item.result.value === 'yin') {
+          iconClass = 'fa-times-circle';
+          textColor = 'text-red-600';
+        }
+        
+        historyItem.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="${textColor} font-medium">${item.result.name}</span>
+            <span class="text-xs text-gray-500">${item.time}</span>
+          </div>
+          <p class="text-sm mt-1">${item.result.description}</p>
+        `;
+        
+        historyList.appendChild(historyItem);
+      });
+    }
+
+    // 清空历史记录
+    function clearHistory() {
+      if (confirm('确定要清空历史记录吗？')) {
+        gameState.history = [];
+        saveHistory();
+        updateHistoryDisplay();
+      }
+    }
+
+    // 抽签函数
+    function drawLot() {
+      // 隐藏掷杯区域和结果区域
+      resultArea.classList.add('hidden');
+      
+      // 显示抽签结果区域
+      lotteryResultArea.classList.remove('hidden');
+      
+      // 随机选择一个签
+      const randomLot = lots[Math.floor(Math.random() * lots.length)];
+      
+      // 保存当前抽到的签号
+      gameState.lotteryState.isActive = true;
+      gameState.lotteryState.currentLotNumber = randomLot.number;
+      gameState.lotteryState.currentHolyCups = 0;
+      
+      // 更新签文显示 - 显示签号和凶吉，不显示签文内容
+      document.getElementById('lot-number').textContent = `第${randomLot.number}签`;
+      document.getElementById('lot-luck').textContent = randomLot.luck;
+      document.getElementById('lot-content').textContent = "请完成连续三次圣杯仪式投掷，以显示签文内容";
+      
+      // 修改返回按钮文本
+      backToDivinationBtn.innerHTML = '<i class="fa fa-arrow-left mr-1"></i> 返回继续掷圣杯';
+    }
+
+    // 返回掷圣杯函数
+    function backToDivination() {
+      // 隐藏抽签结果区域
+      lotteryResultArea.classList.add('hidden');
+      
+      // 重置抽签流程状态
+      gameState.lotteryState.isActive = false;
+      gameState.lotteryState.currentLotNumber = null;
+      gameState.lotteryState.currentHolyCups = 0;
+      
+      // 显示结果区域
+      resultArea.classList.remove('hidden');
+      
+      // 更新结果描述
+      resultDescription.textContent = '请掷圣杯开始占卦。';
+      
+      // 隐藏抽签按钮
+      lotteryButtonContainer.classList.add('hidden');
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+
+
+</body></html>
